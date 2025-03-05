@@ -31,7 +31,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${SDL2_LIBRARIES}
-    ${SDL2_TTF_LIBRARIES}
+    SDL2_ttf::SDL2_ttf    # Modified this line to use the correct target
 )
 
 # Add custom target to run the executable

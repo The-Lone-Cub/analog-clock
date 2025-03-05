@@ -2,6 +2,7 @@
 #define RENDERER_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include "Clock.h"
 
 class Renderer {
@@ -14,14 +15,16 @@ public:
     void cleanup();
 
 private:
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    int width;
-    int height;
+    void createClockFaceTexture();
+    void createSignatureTexture();
+    void drawHand(float angle, float length, int thickness, Uint8 r, Uint8 g, Uint8 b);
 
-    void drawClockFace();
-    void drawHourMarkers();
-    void drawHand(float angle, float length, int thickness);
+    SDL_Window *window;
+    SDL_Renderer *renderer;
+    SDL_Texture *clockFaceTexture;
+    SDL_Texture *signatureTexture;
+    TTF_Font *font;
+    int width, height, radius;
 };
 
 #endif // RENDERER_H
