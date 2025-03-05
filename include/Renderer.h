@@ -15,6 +15,7 @@ public:
     void cleanup();
 
 private:
+    void filledPolygon(const SDL_Point *points, int count);
     void createClockFaceTexture();
     void createSignatureTexture();
     void drawHand(float angle, float length, int thickness, Uint8 r, Uint8 g, Uint8 b);

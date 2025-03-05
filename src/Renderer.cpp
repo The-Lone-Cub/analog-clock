@@ -1,5 +1,7 @@
 #include "Renderer.h"
 #include <cmath>
+#include <vector>
+#include <algorithm>
 
 Renderer::Renderer(int width, int height) : window(nullptr), renderer(nullptr), clockFaceTexture(nullptr),
     signatureTexture(nullptr), font(nullptr), width(width), height(height), radius(0) {}
@@ -173,21 +175,63 @@ void Renderer::drawHand(float angle, float length, int thickness, Uint8 r, Uint8
     float radians = angle * M_PI / 180.0f;
 
     float cos_angle = cos(radians);
-    float sin_angle = sin(radians);
+    float sin_angle = sin(angle * M_PI / 180.0f);
     
-    int x2 = centerX + static_cast<int>(length * cos_angle);
-    int y2 = centerY + static_cast<int>(length * sin_angle);
-
+    // Calculate perpendicular vectors for thickness
+    float perpX = -sin_angle * (thickness / 2.0f);
+    float perpY = cos_angle * (thickness / 2.0f);
+    
+    // Calculate the four corners of the hand
+    SDL_Point points[4] = {
+        {static_cast<int>(centerX + perpX), static_cast<int>(centerY + perpY)},
+        {static_cast<int>(centerX - perpX), static_cast<int>(centerY - perpY)},
+        {static_cast<int>(centerX + length * cos_angle - perpX), 
+         static_cast<int>(centerY + length * sin_angle - perpY)},
+        {static_cast<int>(centerX + length * cos_angle + perpX), 
+         static_cast<int>(centerY + length * sin_angle + perpY)}
+    };
+    
+    // Set color and draw filled polygon
     SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+    filledPolygon(points, 4);
+}
+
+// Add this helper function right after drawHand
+void Renderer::filledPolygon(const SDL_Point* points, int count) {
+    // Find top and bottom y coordinates
+    int minY = points[0].y;
+    int maxY = points[0].y;
+    for (int i = 1; i < count; i++) {
+        minY = std::min(minY, points[i].y);
+        maxY = std::max(maxY, points[i].y);
+    }
     
-    // Draw thick line using hardware-accelerated rendering
-    for (int i = -thickness/2; i <= thickness/2; i++) {
-        int offsetX = static_cast<int>(-sin_angle * i);
-        int offsetY = static_cast<int>(cos_angle * i);
-        SDL_RenderDrawLine(renderer, 
-            centerX + offsetX, 
-            centerY + offsetY, 
-            x2 + offsetX, 
-            y2 + offsetY);
+    // Scan line algorithm
+    for (int y = minY; y <= maxY; y++) {
+        std::vector<int> intersections;
+        
+        // Find intersections with all edges
+        for (int i = 0; i < count; i++) {
+            int j = (i + 1) % count;
+            if ((points[i].y <= y && points[j].y > y) || 
+                (points[j].y <= y && points[i].y > y)) {
+                float x = points[i].x + (y - points[i].y) * 
+                         (points[j].x - points[i].x) / 
+                         static_cast<float>(points[j].y - points[i].y);
+                intersections.push_back(static_cast<int>(x));
+            }
+        }
+        
+        // Sort intersections
+        std::sort(intersections.begin(), intersections.end());
+        
+        // Draw horizontal lines between pairs of intersections
+        for (size_t i = 0; i < intersections.size(); i += 2) {
+            if (i + 1 < intersections.size()) {
+                SDL_RenderDrawLine(renderer, 
+                    intersections[i], y, 
+                    intersections[i + 1], y);
+            }
+        }
     }
 }

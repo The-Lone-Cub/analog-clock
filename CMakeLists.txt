@@ -30,6 +30,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
+    -mwindows
     ${SDL2_LIBRARIES}
     SDL2_ttf::SDL2_ttf    # Modified this line to use the correct target
 )
